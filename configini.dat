@@ -1,0 +1,12 @@
+%  CONFIGURATION FILE
+%  Enter all the desired values for the constants used in the model. A
+%  description is provided for all of them.
+%  USE SEMICOLON AS DELIMITER
+%  Copyright (c) 2020, Pablo J. Rosado Junquera (pabloimie@gmail.com)
+%  Version: 1.0
+parameter;value
+solid_filename;aircraft_base.stl
+FREE;FREE
+cube_filename;cube.stl
+cube_dimensions;7,7,-7,-7
+cube_zwidth;10,0

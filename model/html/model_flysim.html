@@ -1,0 +1,429 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>model_flysim</title><meta name="generator" content="MATLAB 9.8"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2020-09-06"><meta name="DC.source" content="model_flysim.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">model_flysim</a></li><li><a href="#2">PROBLEM DEFINITION AND SOLVING</a></li><li><a href="#3">PRESSURE COMPUTATION FACETS</a></li><li><a href="#4">PRESSURE COMPUTATION POINTS</a></li><li><a href="#5">COMPUTE FORCES AND MOMENTS</a></li><li><a href="#6">PLOT THE RESULTS (if asked to do so)</a></li></ul></div><h2 id="1">model_flysim</h2><pre class="codeinput"><span class="keyword">function</span> [Fsum,Msum,field] = model_flysim(VCi,FCi,keycubes,VFi,FFi,ails,airspd,precision,toggleplot)
+</pre><h2 id="2">PROBLEM DEFINITION AND SOLVING</h2><pre class="codeinput">    <span class="comment">% Perform solid operations</span>
+    [VAir,FAir] = mesh_boolean(VCi,FCi,VFi,FFi,<span class="string">'minus'</span>);
+    [mVAir,mFAir] = deal(VCi,FCi);
+    <span class="keyword">for</span> k = 1:1:size(keycubes,1)
+        [mVAir,mFAir] = mesh_boolean(mVAir,mFAir,keycubes{k},FCi,<span class="string">'minus'</span>);
+    <span class="keyword">end</span>
+
+    <span class="comment">% Subtract the ailerons</span>
+    <span class="keyword">for</span> r = 1:1:(size(ails,2)/2)
+        [VAir,FAir] = mesh_boolean(VAir,FAir,ails{r},ails{r + size(ails,2)/2},<span class="string">'minus'</span>);
+    <span class="keyword">end</span>
+
+<span class="comment">    %{
+</span><span class="comment">    PatchProps.FaceColor = 'r';PatchProps.EdgeColor = 'none';light;
+</span><span class="comment">    patch('Faces', FFi, 'Vertices',[VFi(:,1) VFi(:,3) VFi(:,2)], PatchProps); hold on; axis equal;
+</span><span class="comment">    set(gca,'CameraPosition',[-21.168 25.68 17.235]);set(gca,'XColor', 'none','YColor','none','ZColor', 'none');
+</span><span class="comment">    fhgj
+</span><span class="comment">    %}
+</span>
+<span class="comment">    %{
+</span><span class="comment">    PatchProps.FaceColor = 'b';PatchProps.EdgeColor = 'none';light;
+</span><span class="comment">    patch('Faces', FAir, 'Vertices',[VAir(:,1) VAir(:,3) VAir(:,2)], PatchProps); hold on; axis equal;
+</span><span class="comment">    set(gca,'CameraPosition',[-21.168 25.68 17.235]);set(gca,'XColor', 'none','YColor','none','ZColor', 'none');
+</span><span class="comment">    jkghjk
+</span><span class="comment">    %}
+</span>
+
+    <span class="comment">% Repair the mesh (Removed: it causes Tetgen to fail in certain situations)</span>
+    <span class="comment">% [VAir,FAir,~] = clean_mesh(VAir,FAir);</span>
+
+    <span class="comment">% Generate the mesh</span>
+    [Vextra, Textra, ~] = model_tetgen(mVAir,mFAir,[],[],[],<span class="string">'Flags'</span>,<span class="string">'-pq1.1a0.5'</span>);
+<span class="comment">    %{
+</span><span class="comment">    pdemesh([Vextra(:,1) Vextra(:,3) Vextra(:,2)]',Textra');
+</span><span class="comment">    title(strcat("Problem with ",num2str(size(Textra,1))," elements"));
+</span><span class="comment">    set(gca,'CameraPosition',[-21.168 25.68 17.235]);set(gca,'XColor', 'none','YColor','none','ZColor', 'none');
+</span><span class="comment">    sdgdfg
+</span><span class="comment">    %}
+</span>
+    [Valone, ~, ~] = model_tetgen(VAir,FAir,[],[],[],<span class="string">'Flags'</span>,[<span class="string">'-T1e-9-a'</span> num2str(precision) <span class="string">'-S0'</span>]);
+    Vextra = setdiff(Vextra,VAir,<span class="string">'rows'</span>);
+    insidx = inpolyhedron(FFi,VFi,Vextra);
+    Vextra(insidx == 1,:) = [];
+    [Vm, Tm, ~] = model_tetgen(VAir,FAir,Vextra,[],[],<span class="string">'Flags'</span>,[<span class="string">'-T1e-9-a'</span> num2str(precision) <span class="string">'-S0-i'</span>]);
+
+    <span class="comment">% Compute boundary conditions</span>
+        <span class="comment">% Casing</span>
+    [~, fish_coll, ~] = intersect(Vm,Valone,<span class="string">'rows'</span>);
+    casing = [find((Vm(:,1)) == min((Vm(:,1))));find((Vm(:,1)) == max((Vm(:,1))));
+              find((Vm(:,2)) == min((Vm(:,2))));find((Vm(:,2)) == max((Vm(:,2))))];
+    walls = [fish_coll;casing];
+
+        <span class="comment">% Inlet and outlet</span>
+    inflow = setdiff(find((Vm(:,3) == max((Vm(:,3))))),casing);
+    outflow = setdiff(find((Vm(:,3) == min((Vm(:,3))))),casing);
+
+<span class="comment">    %{
+</span><span class="comment">    pdemesh([Vm(:,1) Vm(:,3) Vm(:,2)]',Tm');
+</span><span class="comment">    title(strcat("Problem with ",num2str(size(Tm,1))," elements"));
+</span><span class="comment">    set(gca,'CameraPosition',[-21.168 25.68 17.235]);set(gca,'XColor', 'none','YColor','none','ZColor', 'none');
+</span><span class="comment">    sdgdfg
+</span><span class="comment">    %}
+</span>
+<span class="comment">    %{
+</span><span class="comment">    hold on;
+</span><span class="comment">    scatter3(Vm(:,1),Vm(:,3),Vm(:,2),10,[0.55 0.54 0.54],'.');
+</span><span class="comment">    scatter3(Vm(walls,1),Vm(walls,3),Vm(walls,2),2,'r.');
+</span><span class="comment">    scatter3(Vm(inflow,1),Vm(inflow,3),Vm(inflow,2),30,[0.9290, 0.6940, 0.1250],'^','filled');
+</span><span class="comment">    scatter3(Vm(outflow,1),Vm(outflow,3),Vm(outflow,2),30,[0, 0.4470, 0.7410],'^','filled');
+</span><span class="comment">    axis equal;view(3);xlabel('X axis');ylabel('Y axis');zlabel('Z axis');
+</span><span class="comment">    set(gca,'CameraPosition',[-21.168 25.68 17.235]);set(gca,'XColor', 'none','YColor','none','ZColor', 'none');
+</span><span class="comment">    sdsdf
+</span><span class="comment">    %}
+</span>    disp(strcat(<span class="string">"[model_flysim]: solving problem with "</span>,num2str(size(Tm,1)),<span class="string">" elements..."</span>)); pause(0.001);
+    field = model_solve_navierstokes(Vm,Tm,inflow',outflow',walls',airspd);
+    disp(<span class="string">"[model_flysim]: problem solved. Computing pressure..."</span>); pause(0.001);
+</pre><pre class="codeoutput error">Not enough input arguments.
+
+Error in model_flysim (line 8)
+    [VAir,FAir] = mesh_boolean(VCi,FCi,VFi,FFi,'minus');
+</pre><h2 id="3">PRESSURE COMPUTATION FACETS</h2><pre class="codeinput">    <span class="comment">% Compute area of triangle in 3D coordinates</span>
+    <span class="comment">% The 1ast point is given by the 1ast index in the facet list, and so on</span>
+
+    <span class="comment">% tol = 0.005; % is the minimum valid area</span>
+    tol = 0;
+    [st, nd, rd, Fcont] = deal(VFi(FFi(:,1),:),VFi(FFi(:,2),:),VFi(FFi(:,3),:),1);
+
+    <span class="keyword">for</span> plo = 1:1:size(FFi,1)
+        [xi,yi,zi] = deal([st(plo,1),nd(plo,1),rd(plo,1)],<span class="keyword">...</span>
+        [st(plo,2),nd(plo,2),rd(plo,2)],[st(plo,3),nd(plo,3),rd(plo,3)]);
+        ons = ones(1,size(xi,2));
+        A(plo) = 0.5*sqrt(det([xi;yi;ons])^2 + det([yi;zi;ons])^2 + det([zi;xi;ons])^2);
+
+        <span class="keyword">if</span> A(plo) &gt;= tol
+            col = <span class="string">'w'</span>;
+            Vcent(Fcont,:) = [xi,yi,zi];
+            Fsel(Fcont,:) = FFi(plo,:);
+            Asel(Fcont) = A(plo);
+            Fcont = Fcont + 1;
+        <span class="keyword">else</span>
+            col = <span class="string">'r'</span>;
+        <span class="keyword">end</span>
+        <span class="keyword">if</span> (toggleplot)
+            hold <span class="string">on</span>;
+            fill3(xi,yi,zi,col);
+            axis <span class="string">equal</span>;
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+</pre><h2 id="4">PRESSURE COMPUTATION POINTS</h2><pre class="codeinput">    shift = 0.3; <span class="comment">% is the gap vehicle - calculation point</span>
+    dir = COMPUTE_mesh_normals(struct(<span class="string">'vertices'</span>,VFi,<span class="string">'faces'</span>,Fsel));
+
+    <span class="comment">% Computation points</span>
+    Vcomp = [mean(Vcent(:,1:3),2),mean(Vcent(:,4:6),2),mean(Vcent(:,7:9),2)] + dir*shift;
+
+    <span class="comment">% scatter3(Vcomp(:,1),Vcomp(:,2),Vcomp(:,3),'b');</span>
+    <span class="comment">% quiver3(mean(Vcent(:,1:3),2),mean(Vcent(:,4:6),2),mean(Vcent(:,7:9),2),dir(:,1),dir(:,2),dir(:,3),1,'LineWidth',1,'Color','b');</span>
+
+    <span class="comment">% Check if there are points inside the model. Remove them from the calculation array.</span>
+    insidx = inpolyhedron(FFi,VFi, Vcomp);
+    Vdefc = Vcomp; Vdefc(insidx == 1,:) = [];
+    dirdefc = -dir; dirdefc(insidx == 1,:) = [];
+    Aseldefc = Asel; Aseldefc(insidx == 1) = [];
+</pre><h2 id="5">COMPUTE FORCES AND MOMENTS</h2><pre class="codeinput">    load(<span class="string">'ns_3d.mat'</span>);
+    dat = [x u v w p];
+
+    <span class="comment">% Noise filtering (Old, it uses the default sub-solved pressure)</span>
+    [~,pos] = rmoutliers(dat(:,7),<span class="string">'percentiles'</span>,[30 95]);
+    dat = dat(~pos,:);
+    izero = find(dat(:,7) &lt; 0);
+    dat(izero,:) = [];
+
+    <span class="comment">% Remove the NaN values</span>
+    idNaN = find(isnan(dat(:,7)));
+    dat(idNaN,:) = [];
+
+    <span class="comment">% METHOD 1 (It is more accurate theoretically, but not in practice)</span>
+<span class="comment">    %{
+</span><span class="comment">    barpoints = 3;
+</span><span class="comment">    id = setdiff(1:1:size(Vcomp,1),find(insidx == 1));
+</span><span class="comment">    dims = [7 25 121 673];
+</span><span class="comment">    N = [0 0 0];
+</span><span class="comment">    for g = 1:1:size(Vdefc,1)
+</span><span class="comment">        cutr = [Vcent(id(g),[1 4 7]);Vcent(id(g),[2 5 8]);Vcent(id(g),[3 6 9])];
+</span><span class="comment">        N = [N;get_barycenter_inners(cutr,barpoints)];
+</span><span class="comment">    end
+</span><span class="comment">    N(1,:) = [];
+</span><span class="comment">    Pmed = mean(griddatan([dat(:,1) dat(:,2) dat(:,3)],dat(:,7),N),2);
+</span><span class="comment">    for pm = 1:1:(length(Pmed))/dims(barpoints)
+</span><span class="comment">        Pdefc(pm) = mean(Pmed(pm*dims(barpoints)-(dims(barpoints)-1):pm*dims(barpoints)));
+</span><span class="comment">    end
+</span><span class="comment">    %}
+</span>
+    <span class="comment">% METHOD 2 (Faster, while less accurate)</span>
+    Pdefc = griddatan(dat(:,1:3),dat(:,7),Vdefc);
+
+    <span class="comment">% FORCE AND MOMENT COMPUTATION</span>
+    Fdefc = dirdefc.*(Aseldefc(:)).*(Pdefc(:));
+    Fsum = sum(Fdefc);
+    rad = Vdefc-dirdefc*shift;
+    Mdefc = cross(rad,Fdefc,2);
+    Msum = sum(Mdefc);
+</pre><h2 id="6">PLOT THE RESULTS (if asked to do so)</h2><pre class="codeinput">    <span class="keyword">if</span> (toggleplot)
+        quiver3(Vdefc(:,1),Vdefc(:,2),Vdefc(:,3),rad(:,1),rad(:,2),rad(:,3),<span class="string">'Color'</span>,[0.9290 0.6940 0.1250]);
+        quiver3(Vdefc(:,1),Vdefc(:,2),Vdefc(:,3),-Fdefc(:,1),-Fdefc(:,2),-Fdefc(:,3),<span class="string">'Color'</span>,<span class="string">'m'</span>);
+        quiver3(0,0,0,Fsum(:,1),Fsum(:,2),Fsum(:,3),<span class="string">'Color'</span>,<span class="string">'r'</span>);
+        quiver3(0,0,0,Msum(:,1),Msum(:,2),Msum(:,3),<span class="string">'Color'</span>,<span class="string">'b'</span>);
+        zlim([-5 5]);xlim([-5 5]);ylim([-5 5]);
+        fgfgh;
+    <span class="keyword">end</span>
+</pre><pre class="codeinput"><span class="keyword">end</span>
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2020a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% model_flysim
+
+function [Fsum,Msum,field] = model_flysim(VCi,FCi,keycubes,VFi,FFi,ails,airspd,precision,toggleplot)
+
+    %% PROBLEM DEFINITION AND SOLVING
+    
+    % Perform solid operations
+    [VAir,FAir] = mesh_boolean(VCi,FCi,VFi,FFi,'minus');
+    [mVAir,mFAir] = deal(VCi,FCi);
+    for k = 1:1:size(keycubes,1)
+        [mVAir,mFAir] = mesh_boolean(mVAir,mFAir,keycubes{k},FCi,'minus');
+    end
+    
+    % Subtract the ailerons
+    for r = 1:1:(size(ails,2)/2)
+        [VAir,FAir] = mesh_boolean(VAir,FAir,ails{r},ails{r + size(ails,2)/2},'minus');
+    end
+    
+    %{
+    PatchProps.FaceColor = 'r';PatchProps.EdgeColor = 'none';light;
+    patch('Faces', FFi, 'Vertices',[VFi(:,1) VFi(:,3) VFi(:,2)], PatchProps); hold on; axis equal;
+    set(gca,'CameraPosition',[-21.168 25.68 17.235]);set(gca,'XColor', 'none','YColor','none','ZColor', 'none');
+    fhgj
+    %}
+    
+    %{
+    PatchProps.FaceColor = 'b';PatchProps.EdgeColor = 'none';light;
+    patch('Faces', FAir, 'Vertices',[VAir(:,1) VAir(:,3) VAir(:,2)], PatchProps); hold on; axis equal;
+    set(gca,'CameraPosition',[-21.168 25.68 17.235]);set(gca,'XColor', 'none','YColor','none','ZColor', 'none');
+    jkghjk
+    %}
+    
+    
+    % Repair the mesh (Removed: it causes Tetgen to fail in certain situations)
+    % [VAir,FAir,~] = clean_mesh(VAir,FAir);
+    
+    % Generate the mesh
+    [Vextra, Textra, ~] = model_tetgen(mVAir,mFAir,[],[],[],'Flags','-pq1.1a0.5');
+    %{
+    pdemesh([Vextra(:,1) Vextra(:,3) Vextra(:,2)]',Textra');
+    title(strcat("Problem with ",num2str(size(Textra,1))," elements"));
+    set(gca,'CameraPosition',[-21.168 25.68 17.235]);set(gca,'XColor', 'none','YColor','none','ZColor', 'none');
+    sdgdfg
+    %}
+    
+    [Valone, ~, ~] = model_tetgen(VAir,FAir,[],[],[],'Flags',['-T1e-9-a' num2str(precision) '-S0']);
+    Vextra = setdiff(Vextra,VAir,'rows');
+    insidx = inpolyhedron(FFi,VFi,Vextra);
+    Vextra(insidx == 1,:) = [];
+    [Vm, Tm, ~] = model_tetgen(VAir,FAir,Vextra,[],[],'Flags',['-T1e-9-a' num2str(precision) '-S0-i']);
+    
+    % Compute boundary conditions
+        % Casing
+    [~, fish_coll, ~] = intersect(Vm,Valone,'rows');
+    casing = [find((Vm(:,1)) == min((Vm(:,1))));find((Vm(:,1)) == max((Vm(:,1))));
+              find((Vm(:,2)) == min((Vm(:,2))));find((Vm(:,2)) == max((Vm(:,2))))];
+    walls = [fish_coll;casing];
+    
+        % Inlet and outlet
+    inflow = setdiff(find((Vm(:,3) == max((Vm(:,3))))),casing);
+    outflow = setdiff(find((Vm(:,3) == min((Vm(:,3))))),casing);
+    
+    %{
+    pdemesh([Vm(:,1) Vm(:,3) Vm(:,2)]',Tm');
+    title(strcat("Problem with ",num2str(size(Tm,1))," elements"));
+    set(gca,'CameraPosition',[-21.168 25.68 17.235]);set(gca,'XColor', 'none','YColor','none','ZColor', 'none');
+    sdgdfg
+    %}
+   
+    %{
+    hold on;
+    scatter3(Vm(:,1),Vm(:,3),Vm(:,2),10,[0.55 0.54 0.54],'.');
+    scatter3(Vm(walls,1),Vm(walls,3),Vm(walls,2),2,'r.');
+    scatter3(Vm(inflow,1),Vm(inflow,3),Vm(inflow,2),30,[0.9290, 0.6940, 0.1250],'^','filled');
+    scatter3(Vm(outflow,1),Vm(outflow,3),Vm(outflow,2),30,[0, 0.4470, 0.7410],'^','filled');
+    axis equal;view(3);xlabel('X axis');ylabel('Y axis');zlabel('Z axis');
+    set(gca,'CameraPosition',[-21.168 25.68 17.235]);set(gca,'XColor', 'none','YColor','none','ZColor', 'none');
+    sdsdf
+    %}
+    disp(strcat("[model_flysim]: solving problem with ",num2str(size(Tm,1))," elements...")); pause(0.001);
+    field = model_solve_navierstokes(Vm,Tm,inflow',outflow',walls',airspd);
+    disp("[model_flysim]: problem solved. Computing pressure..."); pause(0.001);
+    
+    %% PRESSURE COMPUTATION FACETS
+
+    % Compute area of triangle in 3D coordinates
+    % The 1ast point is given by the 1ast index in the facet list, and so on
+
+    % tol = 0.005; % is the minimum valid area
+    tol = 0;
+    [st, nd, rd, Fcont] = deal(VFi(FFi(:,1),:),VFi(FFi(:,2),:),VFi(FFi(:,3),:),1);
+
+    for plo = 1:1:size(FFi,1)
+        [xi,yi,zi] = deal([st(plo,1),nd(plo,1),rd(plo,1)],...
+        [st(plo,2),nd(plo,2),rd(plo,2)],[st(plo,3),nd(plo,3),rd(plo,3)]);
+        ons = ones(1,size(xi,2));
+        A(plo) = 0.5*sqrt(det([xi;yi;ons])^2 + det([yi;zi;ons])^2 + det([zi;xi;ons])^2);
+
+        if A(plo) >= tol
+            col = 'w';
+            Vcent(Fcont,:) = [xi,yi,zi];
+            Fsel(Fcont,:) = FFi(plo,:);
+            Asel(Fcont) = A(plo);
+            Fcont = Fcont + 1;
+        else
+            col = 'r';
+        end
+        if (toggleplot)
+            hold on;
+            fill3(xi,yi,zi,col);
+            axis equal;
+        end
+    end
+
+    %% PRESSURE COMPUTATION POINTS
+
+    shift = 0.3; % is the gap vehicle - calculation point
+    dir = COMPUTE_mesh_normals(struct('vertices',VFi,'faces',Fsel));
+    
+    % Computation points
+    Vcomp = [mean(Vcent(:,1:3),2),mean(Vcent(:,4:6),2),mean(Vcent(:,7:9),2)] + dir*shift;
+
+    % scatter3(Vcomp(:,1),Vcomp(:,2),Vcomp(:,3),'b');
+    % quiver3(mean(Vcent(:,1:3),2),mean(Vcent(:,4:6),2),mean(Vcent(:,7:9),2),dir(:,1),dir(:,2),dir(:,3),1,'LineWidth',1,'Color','b');
+
+    % Check if there are points inside the model. Remove them from the calculation array. 
+    insidx = inpolyhedron(FFi,VFi, Vcomp);
+    Vdefc = Vcomp; Vdefc(insidx == 1,:) = [];
+    dirdefc = -dir; dirdefc(insidx == 1,:) = [];
+    Aseldefc = Asel; Aseldefc(insidx == 1) = [];
+
+    %% COMPUTE FORCES AND MOMENTS
+    
+    load('ns_3d.mat');
+    dat = [x u v w p];
+
+    % Noise filtering (Old, it uses the default sub-solved pressure)
+    [~,pos] = rmoutliers(dat(:,7),'percentiles',[30 95]);
+    dat = dat(~pos,:);
+    izero = find(dat(:,7) < 0);
+    dat(izero,:) = [];
+    
+    % Remove the NaN values
+    idNaN = find(isnan(dat(:,7)));
+    dat(idNaN,:) = [];
+    
+    % METHOD 1 (It is more accurate theoretically, but not in practice)
+    %{
+    barpoints = 3;
+    id = setdiff(1:1:size(Vcomp,1),find(insidx == 1));
+    dims = [7 25 121 673];
+    N = [0 0 0];
+    for g = 1:1:size(Vdefc,1)
+        cutr = [Vcent(id(g),[1 4 7]);Vcent(id(g),[2 5 8]);Vcent(id(g),[3 6 9])];
+        N = [N;get_barycenter_inners(cutr,barpoints)];
+    end
+    N(1,:) = [];
+    Pmed = mean(griddatan([dat(:,1) dat(:,2) dat(:,3)],dat(:,7),N),2);
+    for pm = 1:1:(length(Pmed))/dims(barpoints)
+        Pdefc(pm) = mean(Pmed(pm*dims(barpoints)-(dims(barpoints)-1):pm*dims(barpoints)));
+    end
+    %}
+    
+    % METHOD 2 (Faster, while less accurate)
+    Pdefc = griddatan(dat(:,1:3),dat(:,7),Vdefc);
+    
+    % FORCE AND MOMENT COMPUTATION
+    Fdefc = dirdefc.*(Aseldefc(:)).*(Pdefc(:));
+    Fsum = sum(Fdefc);
+    rad = Vdefc-dirdefc*shift;
+    Mdefc = cross(rad,Fdefc,2);
+    Msum = sum(Mdefc);
+    
+    %% PLOT THE RESULTS (if asked to do so)
+    
+    if (toggleplot)
+        quiver3(Vdefc(:,1),Vdefc(:,2),Vdefc(:,3),rad(:,1),rad(:,2),rad(:,3),'Color',[0.9290 0.6940 0.1250]);
+        quiver3(Vdefc(:,1),Vdefc(:,2),Vdefc(:,3),-Fdefc(:,1),-Fdefc(:,2),-Fdefc(:,3),'Color','m');
+        quiver3(0,0,0,Fsum(:,1),Fsum(:,2),Fsum(:,3),'Color','r');
+        quiver3(0,0,0,Msum(:,1),Msum(:,2),Msum(:,3),'Color','b');
+        zlim([-5 5]);xlim([-5 5]);ylim([-5 5]);
+        fgfgh;
+    end 
+
+end
+##### SOURCE END #####
+--></body></html>
