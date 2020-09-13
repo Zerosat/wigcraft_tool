@@ -1,7 +1,8 @@
-k = readmatrix("genetic_algorithm_out2.txt");
+k = readmatrix("genetic_algorithm_out.txt");
 hold on;
-for j = 1:size(k,1)
+for j = 3:size(k,1)
     curp = k(j,:);
-    plot(j*ones(1,size(k,2)),curp,'m.--');
+    plot(j*ones(1,size(k,2))-2,curp/54,'m.--');
 end
-plot(1:size(k,1),mean(k,2),'k-');
+mo = mean(k,2)/54;
+plot((3:size(k,1))-2,mo(3:size(mo,1),:),'k-');
