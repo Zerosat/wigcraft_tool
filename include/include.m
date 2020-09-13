@@ -20,5 +20,6 @@ function [] = include()
 	addpath('parties\matlab');
 	addpath('parties\c++');
     addpath('tools\');
+    addpath('results\');
 end
 
